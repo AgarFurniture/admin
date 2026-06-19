@@ -423,6 +423,13 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast svg { width: 16px; height: 16px; stroke: var(--olive-light); fill: none; stroke-width: 2.2; }
+  /* ══════ SAVE STATUS ══════ */
+  .save-status.saving .pulse {
+    animation: pulse-blink 0.8s ease infinite;
+  }
+  @keyframes pulse-blink {
+    0%,100% { opacity:1; } 50% { opacity:0.2; }
+  }
 </style>
 </head>
 <body>
@@ -432,6 +439,20 @@
   <div class="topbar-logo">
     <span class="dot"></span>
     AGAR <span class="sub">Admin Dashboard</span>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:0.7rem;">
+    <div id="saveStatus" class="save-status" style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-muted);">
+      <span class="pulse" style="width:7px;height:7px;border-radius:50%;background:var(--olive-light);flex-shrink:0;display:inline-block;"></span>
+      <span id="saveStatusText">Loading…</span>
+    </div>
+    <button class="btn btn-primary btn-sm" id="saveBtn">
+      <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save
+    </button>
+    <button class="btn btn-danger btn-sm" id="resetBtn">
+      <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+      Reset
+    </button>
   </div>
 </div>
 
