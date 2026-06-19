@@ -656,13 +656,47 @@ function openModal(title, bodyHTML, onSave) {
   document.getElementById('modalOverlay').classList.add('open');
   _modalSaveFn = onSave;
 
-  // Live image preview
+  // ── URL inputs: live preview + sync hidden field ──
   document.querySelectorAll('.field-img-url').forEach(input => {
-    const preview = document.getElementById('preview_' + input.id);
+    const fieldId = input.id.replace('_url', '');
+    const preview = document.getElementById('preview_' + fieldId);
+    const hidden  = document.getElementById(fieldId);
     input.addEventListener('input', () => {
-      if (!preview) return;
-      if (input.value) { preview.src = input.value; preview.style.display = ''; }
-      else preview.style.display = 'none';
+      if (hidden)  hidden.value = input.value;
+      if (preview) { preview.src = input.value; preview.style.display = input.value ? '' : 'none'; }
+    });
+  });
+
+  // ── Tab switching: URL ↔ Upload ──
+  document.querySelectorAll('.img-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const fieldId = btn.dataset.field;
+      const mode    = btn.dataset.mode;
+      document.querySelectorAll(`.img-tab-btn[data-field="${fieldId}"]`).forEach(b => {
+        b.classList.remove('img-tab-active');
+        b.style.borderBottom = '';
+      });
+      btn.classList.add('img-tab-active');
+      btn.style.borderBottom = '2px solid var(--olive-light)';
+      document.getElementById('img-url-panel-'    + fieldId).style.display = mode === 'url'    ? '' : 'none';
+      document.getElementById('img-upload-panel-' + fieldId).style.display = mode === 'upload' ? '' : 'none';
+    });
+  });
+
+  // ── File upload → base64 → hidden field ──
+  document.querySelectorAll('[id$="_file"]').forEach(input => {
+    input.addEventListener('change', () => {
+      const file = input.files[0]; if (!file) return;
+      const fieldId = input.id.replace('_file', '');
+      const reader  = new FileReader();
+      reader.onload = e => {
+        const b64     = e.target.result;
+        const hidden  = document.getElementById(fieldId);
+        const preview = document.getElementById('preview_upload_' + fieldId);
+        if (hidden)  hidden.value = b64;
+        if (preview) { preview.src = b64; preview.style.display = ''; }
+      };
+      reader.readAsDataURL(file);
     });
   });
 }
@@ -728,11 +762,46 @@ function field(id, value, label, lang, rtl = false, placeholder = '') {
 function fieldImg(id, value, label) {
   return `<div class="field">
     <label>${label}</label>
-    <div class="img-preview-row">
-      <img id="preview_${id}" class="img-preview" src="${esc(value)}" style="${value ? '' : 'display:none'}">
-      <input type="url" id="${id}" class="field-img-url" value="${esc(value)}" placeholder="https://…" style="flex:1">
+    <input type="hidden" id="${id}" value="${esc(value)}">
+    <div style="display:flex;gap:0.5rem;margin-bottom:0.55rem;">
+      <button type="button" class="btn btn-sm img-tab-btn img-tab-active"
+        data-field="${id}" data-mode="url"
+        style="border-radius:8px;border-bottom:2px solid var(--olive-light);flex:1;">
+        🔗 رابط URL
+      </button>
+      <button type="button" class="btn btn-sm img-tab-btn"
+        data-field="${id}" data-mode="upload"
+        style="border-radius:8px;flex:1;">
+        📁 رفع من الجهاز
+      </button>
     </div>
-    <p class="field-hint">Paste an image URL. The preview updates as you type.</p>
+
+    <div id="img-url-panel-${id}">
+      <div class="img-preview-row">
+        <img id="preview_${id}" class="img-preview" src="${esc(value)}" style="${value ? '' : 'display:none'}">
+        <input type="url" id="${id}_url" class="field-img-url" value="${esc(value)}"
+          placeholder="https://…" style="flex:1;">
+      </div>
+      <p class="field-hint">الصق رابط الصورة — البريفيو يظهر فوراً.</p>
+    </div>
+
+    <div id="img-upload-panel-${id}" style="display:none;">
+      <div class="img-preview-row">
+        <img id="preview_upload_${id}" class="img-preview" src="${esc(value)}" style="${value ? '' : 'display:none'}">
+        <div style="flex:1;">
+          <div onclick="document.getElementById('${id}_file').click()"
+            style="padding:0.85rem 1rem;border:1.5px dashed var(--card-border);border-radius:var(--radius-sm);
+            text-align:center;cursor:pointer;color:var(--text-muted);font-size:0.82rem;
+            background:rgba(255,255,255,0.02);transition:border-color 0.2s;"
+            onmouseover="this.style.borderColor='var(--olive-light)'"
+            onmouseout="this.style.borderColor='var(--card-border)'">
+            اضغط لاختيار صورة من جهازك
+          </div>
+          <input type="file" id="${id}_file" accept="image/*" style="display:none;">
+        </div>
+      </div>
+      <p class="field-hint">الصورة تُحفظ مباشرة في الداتابيز.</p>
+    </div>
   </div>`;
 }
 
